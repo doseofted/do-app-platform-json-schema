@@ -47,17 +47,21 @@ jobs:
           git checkout -b "$BRANCH"
 
       - name: Commit app_spec.json if changed
+        id: commit
         run: |
           if git diff --quiet -- app_spec.json; then
             echo "No changes to app_spec.json; skipping PR."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           git add app_spec.json
           git commit -m "chore: update app_spec.json"
           git push -u origin "$BRANCH"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create pull request
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
